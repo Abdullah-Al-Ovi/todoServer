@@ -104,10 +104,53 @@ class TodoController {
       return res.status(error?.code || 500).json({
         success: false,
         status: error?.code || 500,
-        message: error.message || error.meta?.message || error.meta?.cause || "Something went wrong while finding tasks",
+        message: error.message || error.meta?.message || error.meta?.cause || "Something went wrong while updating task",
       })
     }
   }
+
+  static async deleteByTodoId(req, res) {
+    const taskId = req.params?.taskId;
+    console.log(taskId);
+    try {
+        const deletedTask = await prisma.todo.delete({
+            where: {
+                id: Number(taskId)
+            }
+        });
+        if (deletedTask) {
+            return res.status(200).json({
+                success: true,
+                status: 200,
+                message: "Task deleted successfully",
+                data: deletedTask
+            });
+        }
+    } catch (error) {
+        if (error.code === 'P2025') {
+            // Handle P2025 error
+            console.error('Prisma Error P2025:', error.message);
+            // Provide user feedback, log the error, or implement fallback behavior
+            return res.status(500).json({
+                success: false,
+                status: 500,
+                message: "Error occurred while deleting task",
+                error: error.message
+            });
+        } else {
+            // Handle other errors
+            console.error('An unexpected error occurred:', error);
+            // Log the error and handle it appropriately
+            return res.status(error?.code || 500).json({
+                success: false,
+                status: error?.code || 500,
+                message: error.message || error.meta?.message || error.meta?.cause || "Something went wrong while deleting task",
+                error: error
+            });
+        }
+    }
+}
+
 }
 
 export default TodoController;
