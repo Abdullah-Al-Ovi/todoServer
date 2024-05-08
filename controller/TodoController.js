@@ -42,9 +42,52 @@ class TodoController {
     }
   }
 
-  static async indexByTodoId(req, res) {
+  static async indexByTodoTitle(req, res) {
+    const searchValue = req.query?.searchValue.trim() 
+    const userId = req.query?.userId
+    if(!searchValue){
+      return res.status(400).json({
+        success: false,
+        status: 400,
+        message: "Please provide search value",
+      });
+    }
+    if(!userId){
+      return res.status(400).json({
+        success: false,
+        status: 400,
+        message: "UserId is missing to search task",
+      });
+    }
     try {
-    } catch (error) { }
+      const searchedTasks = await prisma.todo.findMany({
+        where:{
+          userId: Number(userId),
+          title:{
+            contains: searchValue
+          }
+        }
+      })
+      if(!searchedTasks){
+        return res.status(400).json({
+          success: false,
+          status: 400,
+          message: "failed to search task",
+        });
+      }
+      return res.status(200).json({
+        success:true,
+        status: 200,
+        message:"Searched tasks gotten successfully",
+        data: searchedTasks
+      })
+    } catch (error) { 
+      return res.status(error?.code || 500).json({
+        success: false,
+        status: error?.code || 500,
+        message: error.message || error.meta?.message || error.meta?.cause || "Something went wrong while searching task",
+      })
+     }
   }
 
   static async showByUserId(req, res) {
